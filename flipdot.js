@@ -183,20 +183,32 @@ FlipDot.prototype.matrix = function(row = this.rows, col = this.columns, fill = 
  */
 
 FlipDot.prototype.matrixToBytes = function(matrix) {
-  var x = new Array(matrix[0].length * this.col_bytes).fill(0);
+  const bytes = [];
 
-  // walk columns of bytes
-  for (var j = 0; j < x.length; j++) {
-    // walk bytes in column
-    for (var b = 0; b < this.col_bytes; b++) {
-      // walk bits in byte constructing hex value
-      for (var i = 8*b; i < 8 * (b+1); i++) {
-        x[j] += (matrix[i][j] & 0x01) << i;
+  for (let col = 0; col < matrix[0].length; col++) {
+    for (let byteIndex = 0; byteIndex < this.col_bytes; byteIndex++) {
+      let byte = 0;
+      for (let bitIndex = 0; bitIndex < 8; bitIndex++) {
+        let matrixRow;
+        if (this.rows > 8) {
+          // For displays taller than 8 rows, adjust the bit order
+          matrixRow = (byteIndex + 1) * 8 - 1 - bitIndex;
+          if (matrixRow >= 0 && matrixRow < matrix.length) {
+            byte |= (matrix[matrixRow][col] & 0x01) << (7 - bitIndex);
+          }
+        } else {
+          // For displays of 8 rows or less, use the original bit order
+          matrixRow = byteIndex * 8 + bitIndex;
+          if (matrixRow < matrix.length) {
+            byte |= (matrix[matrixRow][col] & 0x01) << bitIndex;
+          }
+        }
       }
+      bytes.push(byte);
     }
   }
 
-  return x;
+  return bytes;
 }
 
 /**
