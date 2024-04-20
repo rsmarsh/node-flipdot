@@ -40,7 +40,7 @@ var asciiDebug = require('debug')('ascii')
  * @emits FlipDot#free Queue'd data emptied
  */
 
-function FlipDot(port, addr, rows, columns, callback) {
+function FlipDot(port, addr, rows, columns, callback, config) {
   if (typeof port === "function" || typeof port === "undefined") {
     callback = port;
   }
@@ -60,7 +60,8 @@ function FlipDot(port, addr, rows, columns, callback) {
     rows = rows + (8-(rows % 8));
   
   // Properties
-  this.debug = true;
+  this.debug = config.debug || false;
+  this.devMode = config.devMode || false;
   this.hchar = 0x02;
   this.fchar = 0x03;
   this.addr = addr || 5;
@@ -91,7 +92,27 @@ function FlipDot(port, addr, rows, columns, callback) {
 
   this.error_msg = this.writeText('error',undefined,undefined,false,false);
 
-  this.serial = new SerialPort(port, defaults.portSettings, function(err) {
+  const devIntercept = (event, args) => {
+    if (this.debug) {
+      console.log(`Dev Mode: "${event}" event intercepted`)
+      
+      if (args) {
+        console.log(`"${event}" args:`)
+        console.log(args)
+      }
+    }
+
+  }
+
+  this.serial = this.devMode ? {
+    flush:(args) => devIntercept('flush', args),
+    write:(args) => devIntercept('write', args),
+    drain:(args) => devIntercept('drain', args),
+    close:(args) => devIntercept('close', args),
+    on: (args) => devIntercept('on', args)
+  } 
+  : 
+  new SerialPort(port, defaults.portSettings, function(err) {
     if (err) {
       this.emit("error", err);
       return;
@@ -267,6 +288,31 @@ FlipDot.prototype.writeFrames = function(frames, refresh = this.refresh) {
     }
   }
 }
+
+/**
+ * Same as writeText but returns the 2d boolean matrix array, instead of proceeding with hex conversions
+ * This allows for more 
+ */
+FlipDot.prototype.getMatrixFromText = function(text, fontOpt = { font:'Banner', horizontalLayout: 'default', verticalLayout: 'default' }, offset = [0,0], invert = false) { 
+  var aart = figlet.textSync(text, fontOpt);
+
+  asciiDebug(aart);
+
+  // convert string to array at line breaks
+  aart = aart.split('\n');
+
+  // get a matrix to fill 
+  var mat = this.matrix(aart.length+offset[0], this.columns, invert);
+  
+  // fill matrix with on/off char/void
+  aart.forEach(function(row,i) {
+    for (var j = 0; j < row.length; j++) {
+      mat[i+offset[0]][j+offset[1]] = ( (row.charAt(j) === '') || (row.charAt(j) === ' ') ) ? invert : !invert;
+    }
+  });
+  
+  return aart;
+};
 
 /**
  * Write text string to display in ascii art format, using _figlet_ module.
