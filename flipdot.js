@@ -20,7 +20,7 @@
 // Built-in Dependencies
 var Emitter = require("events").EventEmitter;
 // External Dependancies
-var SerialPort = require('serialport');
+var { SerialPort } = require('serialport');
 
 // Modules
 var figlet = require('figlet');
