@@ -291,7 +291,7 @@ FlipDot.prototype.writeFrames = function(frames, refresh = this.refresh) {
 
 /**
  * Same as writeText but returns the 2d boolean matrix array, instead of proceeding with hex conversions
- * This allows for more 
+ * This allows for more custom uses
  */
 FlipDot.prototype.getMatrixFromText = function(text, fontOpt = { font:'Banner', horizontalLayout: 'default', verticalLayout: 'default' }, offset = [0,0], invert = false) { 
   var aart = figlet.textSync(text, fontOpt);
