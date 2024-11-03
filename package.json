@@ -1,7 +1,7 @@
 {
   "name": "flipdot-display",
-  "version": "1.2.0",
-  "description": "RS485 driver for Hanover Flipdot Displays",
+  "version": "1.3.0",
+  "description": "RS485 driver for Hanover Flipdot Displays - Forked and modified",
   "keywords": [
     "flipdot",
     "hanover",
