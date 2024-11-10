@@ -113,7 +113,7 @@ function FlipDot(port, addr, rows, columns, callback, config) {
     on: (args) => devIntercept('on', args)
   } 
   : 
-  new SerialPort(defaults.portSettings, function(err) {
+  new SerialPort({...defaults.portSettings, path: port}, function(err) {
     if (err) {
       this.emit("error", err);
       return;
